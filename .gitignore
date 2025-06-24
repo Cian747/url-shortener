@@ -1,4 +1,4 @@
 env/
 notes.txt
 .env
-pyc*
+__pycache__
