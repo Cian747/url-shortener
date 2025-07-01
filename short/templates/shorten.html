@@ -1,0 +1,10 @@
+
+{% block content%}
+
+<form method="POST">
+  {% csrf_token %}
+  <input type="text" name="url" placeholder="Paste a URL here">
+  <button type="submit">Shorten</button>
+</form>
+
+{% endblock %}
