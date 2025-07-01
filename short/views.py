@@ -11,19 +11,23 @@ from django.http import JsonResponse
 from .serializers import URLSerializer
 
 # class ShortenURL(APIView):
-#     def post(self, request):
-#         serializer = URLSerializer(data = request.data)
-#         if serializer.is_valid():
-#             original_url = serializer.validated_data['url']
-#             print(original_url)
-#             short_code = generate_short_code()
-#             print(short_code)
-#             short_url = ShortURL.objects.create(original_url=original_url, short_code=short_code)
-#             return Response({"short_url": f"http://localhost:8000/{short_code}"}, status=status.HTTP_201_CREATED)
-        
-#         if not serializer.is_valid():
-#             print("Validation errors:", serializer.errors)
-#             return Response(serializer.errors, status=400)
+def post_url(request):
+    # print("Incoming data:", request)
+    serializer = URLSerializer(data = request.POST.data)
+    if serializer.is_valid():
+        original_url = serializer.validated_data['url']
+        print(original_url)
+        short_code = generate_short_code()
+        print(short_code)
+        # short_url = ShortURL.objects.create(original_url=original_url, short_code=short_code)
+        return Response({"short_url": f"http://localhost:8000/{short_code}"}, status=status.HTTP_201_CREATED)
+    
+    if not serializer.is_valid():
+        print("Validation errors:", serializer.errors)
+        return Response(serializer.errors, status=400)
+
+    # print("Status Code:", response.status_code)
+    # print("Raw Response Text:", response.text) 
 
 
         # # Ensure we are sending JSON with correct headers
@@ -41,22 +45,23 @@ from .serializers import URLSerializer
         # return JsonResponse(data)
 
 def shorten_via_api(request):
-    if request.method == "POST":
-        original_url = request.POST.get("url")
+#     if request.method == "POST":
+#         original_url = request.POST.get('url')
+#         # print(original_url)
 
-        # Ensure we are sending JSON with correct headers
-        api_response = requests.post(
-            "http://localhost:8000/api/shorten/",  # or use your domain
-            json={"url": original_url},
-            headers={"Content-Type": "application/json"}
-        )
+#         # Ensure we are sending JSON with correct headers
+#         api_response = requests.post(
+#             "http://localhost:8000/api/shorten/",  # or use your domain
+#             json={"url": original_url},
+#             headers={"Content-Type": "application/json"}
+#         )
 
-        try:
-            data = api_response.json()
-        except ValueError:
-            return JsonResponse({"error": "Invalid response from API"}, status=500)
+#         try:
+#             data = api_response.json()
+#         except ValueError:
+#             return JsonResponse({"error": "Invalid response from API"}, status=500)
 
-        return JsonResponse(data)
+#         return JsonResponse(data)
 
     return render(request, "shorten.html")
 
