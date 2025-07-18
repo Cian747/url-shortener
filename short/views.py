@@ -1,75 +1,33 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import ShortURL
-from .utils import generate_short_code
+# url/views.py
+import random
+import string
+from django.shortcuts import render, redirect
+from .models import UrlData
+from .forms import Url
 from django.shortcuts import redirect
-from .models import ShortURL
-import requests
-from django.http import JsonResponse
-from .serializers import URLSerializer
 
-# class ShortenURL(APIView):
-def post_url(request):
-    # print("Incoming data:", request)
-    serializer = URLSerializer(data = request.POST.data)
-    if serializer.is_valid():
-        original_url = serializer.validated_data['url']
-        print(original_url)
-        short_code = generate_short_code()
-        print(short_code)
-        # short_url = ShortURL.objects.create(original_url=original_url, short_code=short_code)
-        return Response({"short_url": f"http://localhost:8000/{short_code}"}, status=status.HTTP_201_CREATED)
-    
-    if not serializer.is_valid():
-        print("Validation errors:", serializer.errors)
-        return Response(serializer.errors, status=400)
+def urlShort(request):
+    if request.method == 'POST':
+        form = Url(request.POST)
+        print(form.data)
+        if form.is_valid():
+            # Generate a random 10-character slug
+            slug = ''.join(random.choice(string.ascii_letters) for _ in range(10))
+            url = form.cleaned_data["url"]  # Get the original URL from the form
+            new_url = UrlData(url=url, slug=slug)  # Save the URL and slug
+            new_url.save()
+            return redirect('/')  # Redirect to the homepage after saving
+    else:
+        form = Url()  # Empty form if it's a GET request
 
-    # print("Status Code:", response.status_code)
-    # print("Raw Response Text:", response.text) 
+    data = UrlData.objects.all()  # Get all shortened URLs
+    context = {
+        'form': form,
+        'data': data
+    }
+    return render(request, 'shorten.html', context)
 
-
-        # # Ensure we are sending JSON with correct headers
-        # api_response = requests.post(
-        #     "http://localhost:8000/api/shorten/",  # or use your domain
-        #     json={"url": original_url},
-        #     headers={"Content-Type": "application/json"}
-        # )
-
-        # try:
-        #     data = api_response.json()
-        # except ValueError:
-        #     return JsonResponse({"error": "Invalid response from API"}, status=500)
-
-        # return JsonResponse(data)
-
-def shorten_via_api(request):
-#     if request.method == "POST":
-#         original_url = request.POST.get('url')
-#         # print(original_url)
-
-#         # Ensure we are sending JSON with correct headers
-#         api_response = requests.post(
-#             "http://localhost:8000/api/shorten/",  # or use your domain
-#             json={"url": original_url},
-#             headers={"Content-Type": "application/json"}
-#         )
-
-#         try:
-#             data = api_response.json()
-#         except ValueError:
-#             return JsonResponse({"error": "Invalid response from API"}, status=500)
-
-#         return JsonResponse(data)
-
-    return render(request, "shorten.html")
-
-def redirect_view(request, short_code):
-    try:
-        url = ShortURL.objects.get(short_code=short_code)
-        url.clicks += 1
-        url.save()
-        return redirect(url.original_url)
-    except ShortURL.DoesNotExist:
-        return Response(status=404)
+def urlRedirect(request, slugs):
+    # Find the original URL by the slug
+    data = UrlData.objects.get(slug=slugs)
+    return redirect(data.url)  # Redirect to the original URL
