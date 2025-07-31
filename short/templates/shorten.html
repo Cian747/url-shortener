@@ -1,10 +1,17 @@
 
 {% block content%}
 
-<form method="POST">
-  {% csrf_token %}
-  <input type="text" name="url" placeholder="Paste a URL here">
-  <button type="submit">Shorten</button>
-</form>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Shorten URL</button>
+    </form>
+
+    <h2>Shortened URLs</h2>
+    <ul>
+        {% for entry in data %}
+            <li>{{ entry.url }} → <a href="/u/{{ entry.slug }}">/u/{{ entry.slug }}</a></li>
+        {% endfor %}
+    </ul>
 
 {% endblock %}
